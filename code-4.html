@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Categories Tree - Organic Theme</title>
+<style>
+    :root {
+        --leaf-green-dark: #2e7d32;
+        --leaf-green-light: #689f38;
+        --wood-brown: #5d4037;
+        --bg-gradient-start: #a5d6a7; /* Light green */
+        --bg-gradient-end: #e8f5e9;   /* Very light green/off-white */
+        --item-bg: rgba(255, 255, 255, 0.7); /* Semi-transparent white */
+        --item-hover-bg: rgba(255, 255, 255, 0.9);
+        --text-color: #1b5e20; /* Dark green text */
+        --caret-color: var(--leaf-green-dark);
+        --border-radius: 12px; /* Rounded corners */
+        --transition-speed: 0.3s;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+        margin: 0;
+        padding: 20px;
+        min-height: 100vh;
+        overflow-x: hidden; /* Hide horizontal scrollbar */
+        position: relative; /* Needed for absolute positioning of leaves */
+    }
+
+    /* Leaf Animation Container */
+    .leaves-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none; /* Make leaves unclickable */
+        overflow: hidden; /* Prevent leaves from creating scrollbars */
+        z-index: 0; /* Behind content */
+    }
+
+    .leaf {
+        position: absolute;
+        top: -50px; /* Start above the screen */
+        width: 30px; /* Adjust size as needed */
+        height: 30px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50,0 C75,10 90,40 90,60 C90,80 70,100 50,100 C30,100 10,80 10,60 C10,40 25,10 50,0 Z' fill='%23689f38'/%3E%3C/svg%3E"); /* Basic leaf shape SVG */
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0.7;
+        animation: fall linear infinite;
+    }
+
+    /* Staggered animations and positions */
+    .leaf:nth-child(1) { left: 10%; animation-duration: 15s; animation-delay: 0s; }
+    .leaf:nth-child(2) { left: 20%; animation-duration: 12s; animation-delay: -5s; width: 25px; height: 25px; opacity: 0.6;}
+    .leaf:nth-child(3) { left: 30%; animation-duration: 18s; animation-delay: -2s; }
+    .leaf:nth-child(4) { left: 40%; animation-duration: 14s; animation-delay: -8s; width: 35px; height: 35px; opacity: 0.8;}
+    .leaf:nth-child(5) { left: 50%; animation-duration: 16s; animation-delay: -1s; }
+    .leaf:nth-child(6) { left: 60%; animation-duration: 11s; animation-delay: -6s; width: 28px; height: 28px; }
+    .leaf:nth-child(7) { left: 70%; animation-duration: 20s; animation-delay: -3s; }
+    .leaf:nth-child(8) { left: 80%; animation-duration: 13s; animation-delay: -9s; opacity: 0.5; }
+    .leaf:nth-child(9) { left: 90%; animation-duration: 17s; animation-delay: -4s; }
+    .leaf:nth-child(10){ left: 5%;  animation-duration: 19s; animation-delay: -7s; width: 22px; height: 22px;}
+
+    @keyframes fall {
+        0% {
+            transform: translateY(0) rotateZ(0deg) rotateX(0deg);
+            opacity: 0.7;
+        }
+        25% {
+             transform: translateX(20px) rotateZ(30deg);
+        }
+        50% {
+             transform: translateX(-15px) rotateZ(-20deg);
+        }
+        75% {
+            transform: translateX(10px) rotateZ(15deg);
+        }
+        100% {
+            transform: translateY(calc(100vh + 50px)) rotateZ(70deg) rotateX(90deg); /* Fall below screen */
+            opacity: 0;
+        }
+    }
+
+
+    /* Tree Container */
+    #productTreeWrapper {
+      position: relative; /* Ensure content is above leaves */
+      z-index: 1;
+      max-width: 800px; /* Limit width for better readability */
+      margin: 20px auto; /* Center the tree */
+      background: rgba(255, 255, 255, 0.2); /* Very subtle background to lift it */
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+
+    h2 {
+      text-align: center;
+      color: var(--leaf-green-dark);
+      margin-bottom: 25px;
+      font-weight: 600;
+    }
+
+    /* Base list styles */
+    ul, #productTree {
+        list-style-type: none;
+        padding-left: 0; /* Reset padding, handle indentation via li */
+        margin: 0;
+    }
+
+    #productTree ul {
+      padding-left: 25px; /* Indentation for sub-levels */
+      overflow: hidden; /* Needed for max-height transition */
+      transition: max-height var(--transition-speed) ease-in-out,
+                  opacity var(--transition-speed) ease-in-out,
+                  margin-top var(--transition-speed) ease-in-out; /* Added margin transition */
+    }
+
+    /* List Item Styles (Modular Blocks) */
+    #productTree li {
+        background-color: var(--item-bg);
+        margin-bottom: 8px;
+        border-radius: var(--border-radius);
+        padding: 10px 15px;
+        transition: background-color var(--transition-speed) ease, transform 0.1s ease;
+        position: relative; /* For potential pseudo-elements if needed */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    }
+
+    #productTree li:hover {
+       background-color: var(--item-hover-bg);
+       transform: scale(1.01); /* Subtle zoom on hover */
+    }
+
+    /* Style the caret/arrow */
+    .caret {
+        cursor: pointer;
+        user-select: none; /* Prevent text selection */
+        display: inline-block; /* Use flex for better alignment */
+        align-items: center; /* Align icon and text vertically */
+        padding: 5px 0; /* Add some vertical padding */
+        width: 100%; /* Make the clickable area span the width */
+        box-sizing: border-box;
+    }
+
+    .caret::before {
+        content: '+'; /* Use '+' for collapsed */
+        color: var(--caret-color);
+        display: inline-block;
+        font-weight: bold;
+        margin-right: 10px;
+        font-size: 1.2em;
+        width: 1.1em; /* Fixed width for alignment */
+        text-align: center;
+        border: 1px solid var(--caret-color);
+        border-radius: 50%; /* Circular plus/minus */
+        line-height: 1.1em; /* Adjust vertical alignment */
+        transition: transform var(--transition-speed) ease-out, background-color var(--transition-speed) ease-out, color var(--transition-speed) ease-out;
+    }
+
+    /* Rotate the caret when clicked (change to '-') */
+    .caret-down::before {
+        content: '−'; /* Use '−' (minus sign) for expanded */
+        transform: rotate(180deg); /* Optional spin effect */
+        background-color: var(--caret-color);
+        color: white;
+    }
+
+    /* Hide the nested list using max-height for animation */
+    .nested {
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0; /* Collapse margin */
+        padding-left: 25px; /* Consistent indentation */
+        /* Remove direct background/padding, rely on li */
+    }
+
+    /* Show the nested list when the parent is active */
+    .active {
+        /* Estimate a max-height, adjust if needed */
+        max-height: 1500px; /* Should be larger than the maximum possible height */
+        opacity: 1;
+        margin-top: 8px; /* Add margin when expanded */
+    }
+
+    /* Style for product names */
+    .product-name {
+       cursor: help; /* Indicate tooltip availability */
+       color: var(--text-color);
+       display: inline-block;
+       padding: 5px 0; /* Add consistent padding */
+    }
+
+    /* Style for the category names */
+    .category-name {
+        font-weight: 600; /* Slightly bolder */
+        color: var(--leaf-green-dark);
+        font-size: 1.05em;
+    }
+
+    /* Style for list items within nested lists */
+    #productTree ul li {
+        background-color: rgba(232, 245, 233, 0.8); /* Slightly different bg for children */
+        border-left: 3px solid var(--leaf-green-light); /* Indication line */
+    }
+    #productTree ul li:hover {
+       background-color: rgba(232, 245, 233, 1);
+    }
+
+    /* Tooltip styling (browser default, but add cursor) */
+    li[title] {
+       cursor: help;
+    }
+
+</style>
+</head>
+<body>
+
+<!-- Falling Leaves Container -->
+<div class="leaves-container">
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+</div>
+
+<div id="productTreeWrapper">
+    <h2>Product Categories</h2>
+
+    <ul id="productTree">
+      <li> <!-- Category 1 -->
+        <span class="caret category-name">All cryogenic and low temperature products</span>
+        <ul class="nested">
+          <li title="Self-contained closed-cycle cryostat systems utilizing Gifford-McMahon (G-M) refrigeration technology to achieve stable low temperatures (ranging from 3K to 40K base temperature, depending on model) without the need for liquid cryogens. Consists of a cold head (providing 1st and 2nd stage cooling) and a separate compressor unit (air or water-cooled). Designed to provide a controlled low-temperature, high-vacuum (or atmospheric) environment for various scientific measurements including optical, electrical, and magnetic characterization. Features options for optical access windows, various sample holders, temperature sensors, and integration with temperature controllers for precise thermal management from base temperature up to 325K.">
+            <span class="product-name">Closed Circuit Cryostat</span>
+          </li>
+          <li title="Integrated Cryogenic Probe Station systems utilizing cryogenic cooling (liquid He/N2 or closed-cycle refrigerator) to achieve stable temperatures across a wide range (typically 5K/65K up to 325K, extendable options available). Consists of a vacuum chamber housing a temperature-controlled sample stage, multiple high-precision probe arms, and an integrated optical microscope, coupled with the necessary cooling infrastructure. Designed to provide a controlled low-temperature, high-vacuum (to 10^-8 Pa), and optional magnetic field (to 1T) environment for probing and characterizing the electrical, magnetic, and optical properties of materials, wafers, and devices at the micro/nano scale. Features extensive customization options for probes, microscopy, vacuum level, magnetic field, temperature range, and test interfaces.">
+            <span class="product-name">Cryogenic Probe Station</span>
+          </li>
+          <li title="Cryogen-free superconducting magnet systems utilizing closed-cycle pulse tube refrigeration technology to achieve high magnetic fields (up to 14T scalar or various vector configurations) at low temperatures without the need for liquid cryogens. Consists of a superconducting magnet integrated into a cryostat cooled by the refrigerator, often incorporating a Variable Temperature Insert (VTI) enabling sample temperatures down to 1.4K. Designed to provide a stable, high-field, low-temperature, low-vibration environment suitable for sensitive experiments like AFM and various condensed matter physics measurements. Features compatibility with 3He/Dilution refrigerator inserts, multiple sample space options, and good temperature stability (±50mK).">
+            <span class="product-name">Cryon Free Supercunducting Magnet</span>
+          </li>
+           <li title="The DX-1000T is a comprehensive Hall Effect Test System designed for characterizing the electrical properties of semiconductor materials, metals, oxides, and other conductive materials over a temperature range of 77K to 470K. The system integrates an electromagnet (up to 2T at 10mm gap), a precision bipolar power supply, a specialized DX-320 effector unit (combining a constant current source from 0.05uA to 50mA and a high-precision voltmeter from 0.1uV to 30V with switching matrix), a Gauss meter, a high/low temperature Dewar with temperature controller, sample holder, and control/analysis software. It enables fully automated measurement of key parameters including carrier concentration (10³ to 10²³ cm⁻³), mobility (0.1 to 10⁸ cm²/V·s), resistivity (10⁻⁷ to 10¹² Ω·cm), Hall coefficient, and magnetoresistance, providing valuable data for material research and device development."><span class="product-name">DX-1000T High and Low Temperature Hall Effect Test System</span></li>
+           <li title="This Liquid Nitrogen Cryostat system provides a stable, vacuum environment specifically designed for electrical characterization of materials over a temperature range of 65K up to 500K (with options extending to 700K). Utilizing liquid nitrogen (LN2) for rapid cooling (typically reaching 80K in ≤25 min), it is well-suited for integration with electromagnets to perform measurements such as resistivity, Hall effect, and magnetoresistance. Key features include high temperature stability (±0.01K achievable with a compatible controller), various OFHC sample holder sizes, standard PT100 temperature sensing, and highly customizable electrical access through standard 8-pin connectors (expandable up to 32 pins) with options for different wiring and connector types (SMA, BNC, Triax). Different physical configurations (standard, U-shape, compact) are available to fit experimental setups."><span class="product-name">Liquid Nitrogen Cryostat - Electrical</span></li>
+           <li title="The Dexinmag Continuous Flow Cryostat utilizes either Liquid Nitrogen (LN2) or Liquid Helium (LHe) to cool samples via a continuous flow of cold vapor, making it particularly suitable for liquids, powders, irregularly shaped samples, or those with poor thermal conductivity. The system operates with a top-loading sample chamber and features temperature ranges of 4K-325K (LHe) or 80K-325K (LN2), with options extending to 475K. Key characteristics include rapid cooling times, vacuum insulation enhanced by a charcoal getter, customizable optical windows and electrical feedthroughs (8 standard leads, expandable to 32), 360-degree sample rotation, and compatibility with magnetic field environments. Flow control is managed via a needle valve on the detachable cryogen transfer line."><span class="product-name">Continuous Flow Cryostat (Liquid Nitrogen / Helium)</span></li>
+           <li title="The Atmosphere Type Liquid Nitrogen Cryostat uses LN2 cooling with the sample held in a static helium gas environment, ensuring uniform cooling ideal for liquids, powders, irregularly shaped samples, or those with poor thermal conductivity. Operating from 80K to 325K (optional 475K), it features top-loading, ±0.01K stability (controller dependent), dual PT100 temperature sensors, 360° sample rotation, and customizable electrical access (standard 8-pin, expandable). Requires vacuum for insulation and sample chamber."><span class="product-name">Liquid Nitrogen Cryostat - Atmosphere Type</span></li>
+           <li title="The Liquid Nitrogen Cryostat - Optics model is designed for optical experiments such as spectroscopy, luminescence, and photoelectric measurements. It utilizes liquid nitrogen cooling to achieve temperatures from 65K up to 500K (optional 700K) within a vacuum sample environment, ensuring stable conditions. Key features include multiple optical access windows (standard 2, expandable to 5, customizable materials), top-loading for rapid sample changes, various specialized sample holders (solid, liquid, powder), PT100 temperature sensing, and standard 8-pin electrical feedthroughs (expandable). Its compact design is suitable for integration into various experimental setups, including those involving magnetic fields."><span class="product-name">Liquid Nitrogen Cryostat - Optics</span></li>
+           <li title="The Dexinmag Liquid Nitrogen Cryostat utilizes the steady-state bubble principle with LN2 to provide a stable low-temperature environment from 65K up to 800K. Designed for efficiency and rapid cooling, it typically operates with the sample in vacuum, enhanced by an internal low-temperature adsorbent. Standard features include PT100 temperature sensing and high customizability for various experimental needs (optical, electrical, magnetic, thermal) through options like different window materials, electrical leads (8 standard, expandable), connectors (aviation plug, BNC, SMA), and sample holders (standard electrical/optical, probe type, plug-in, etc.). It serves as a versatile platform for variable temperature studies, often integrated with magnetic fields, optical setups, or spectrometers."><span class="product-name">Variable Temperature Liquid Nitrogen Cryostat</span></li>
+           <li title="The DX-1000L Low Temperature Hall Effect Test System is designed for characterizing semiconductor materials at cryogenic temperatures, typically operating from 78K up to 325K (with a 4K-325K option). It comprises an electromagnet (up to 2T at 10mm gap), a high-precision bipolar power supply, a dedicated DX-320 effector unit (integrating constant current source 0.05µA-50mA and microvoltmeter 0.1µV-30V with switching), a low-temperature cryostat with temperature controller, Gauss meter, sample holder, and automated control software. The system measures critical parameters like carrier concentration (5x10¹² - 5x10²⁰ cm⁻³), mobility (0.1 - 10⁸ cm²/V·s), resistivity (5x10⁻⁵ - 5x10² Ω·cm), Hall coefficient, and magnetoresistance. Its one-button automated measurement and data processing capabilities make it suitable for analyzing a wide range of materials including standard semiconductors, low-resistance materials like graphene, and high-resistance materials."><span class="product-name">DX-1000L Low Temperature Hall Effect Test System</span></li>
+           <li title="This 4K Closed-cycle Cryostat system, based on an SHI 4K chiller (Model DX408D/F50), provides a low-temperature environment from 4K to 325K without the consumption of liquid helium. Designed for magnetic, optical, and electrical measurements, the system features a vacuum sample environment (down to 10⁻⁴ Pa), temperature stability of ±0.1K, and cooling capacities of 1.0W @ 4.2K (2nd stage) and 40W @ 43K (1st stage). Key components include the cryostat with vacuum cover and radiation shield, a helium compressor (F50), a DX-290 temperature controller with dual PID loops and network/USB interfaces, a molecular pump system for achieving high vacuum, and a water chiller (DXRG05) for compressor cooling. Its compact and expandable design suits various experimental setups."><span class="product-name">4K Closed-cycle Cryostat</span></li>
+           <li title="The DXTC-290 is a versatile ultra-low temperature controller supporting a wide range of sensors including diodes (Silicon, GaAlAs), RTDs (Platinum, Rhodium-Iron, Germanium, Cernox, etc.), and potentially thermocouples. It features two standard input channels (expandable to 10) and dual control loops with heater outputs up to 200W (Loop 1) and 100W (Loop 2). Key capabilities include high measurement accuracy (optimal 10mK), wide temperature range (down to 300mK with appropriate sensors), 24-bit ADC resolution, advanced PID control with auto-tuning, support for custom temperature curves, and safety features. It offers comprehensive connectivity via Ethernet, RS-485, and USB, along with a 5'' color capacitive touch screen for local operation and configuration. Advanced features like dual constant current source excitation with auto-ranging and thermoelectric potential compensation enhance measurement reliability, especially at cryogenic temperatures."><span class="product-name">DXTC-290 Ultra-low Temperature Controller</span></li>
+        </ul>
+      </li>
+      <li> <!-- Category 2 -->
+        <span class="caret category-name">All probes</span>
+        <ul class="nested">
+          <li title="Axial Hall effect probes for measuring DC (and optionally AC up to 50kHz) magnetic fields along the probe's primary axis. Designed as interchangeable accessories for compatible Gauss meters. Available in a wide variety of configurations including multiple precision levels (high, ultra-high), physical diameters (from <1mm to 5mm+), optional temperature compensation (with integrated sensor), and specialized versions for extended temperature ranges (high temp up to +200°C, low/cryogenic temp down to -269°C). Suitable for diverse applications in research, quality control, and industrial measurement requiring point magnetic field sensing.">
+              <span class="product-name">Axial Probe Specs</span>
+          </li>
+          <li title="Dexinmag Three Dimensional (3D) Hall Probes are designed for measuring vector components (Bx, By, Bz) of magnetic fields up to 300kG (30T) over a frequency range of DC to 100kHz. Available in various physical configurations (round/square brass packaging, diameters 1.2mm to 5.0mm, customizable lengths) and active area sizes (0.10mm/0.15mm). A key feature is their availability across multiple operating temperature specifications: conventional (-10°C to +75°C), temperature compensated (standard range with improved coefficient, high-temp up to +200°C, low-temp down to -269°C, and combined high/low temp versions). These probes offer linearity accuracies of ±0.1% or ±0.5% depending on the model. Customizations like array configurations and integrated temperature sensors are also available.">
+              <span class="product-name">Three Dimensional Hall Probes</span>
+          </li>
+          <li title="Dexinmag offers a comprehensive catalog of Transverse Hall Probes designed for measuring magnetic fields perpendicular to the probe axis. These single-axis probes are available in various configurations, including:\n*   **Precision Levels:** Ordinary, High Precision, and Ultra High Precision (accuracies from ±0.5% down to ±0.05%).\n*   **Physical Form Factors:** Rigid brass probes with varying thicknesses (down to 0.5mm) and widths, flexible probes (down to 0.25mm thickness) packaged in synthetic fat, and a specialized microspaced aluminum probe.\n*   **Temperature Ranges:** Standard (-10°C to +75/100°C), High Temperature (-10°C to +195°C), Low Temperature (-269°C to +75°C), and High & Low Temperature (-269°C to +120/200°C).\n*   **Temperature Compensation:** Optional built-in temperature sensors and compensation for improved accuracy over temperature ranges.\n*   **Field Ranges:** Standard probes measure up to 300kGs (30T), with specialized high-field versions maintaining accuracy at higher fields and a low-field version optimized for the microtesla range.\n*   **Customization:** Probe length, array configurations, and integrated temperature sensors can be customized.">
+              <span class="product-name">Transverse Hall Probes</span>
+          </li>
+           <li title="Dexinmag Two-dimensional (2D) Hall Probes measure Bx and By magnetic field components up to 300kG (30T), typically from DC-1kHz. Available probe types include Ordinary, High/Low Temperature Compensated (-200°C to +200°C range), and OEM versions. Probes come in various diameters (0.9mm-5mm), packaging materials (circular/square brass), and accuracy levels (linearity ±0.1% to ±0.5%). Customization options include probe length, array configurations, and integrated temperature sensors.">
+               <span class="product-name">Two-dimensional Hall Probe</span>
+            </li>
+        </ul>
+      </li>
+       <li> <!-- Category 3 -->
+        <span class="caret category-name">All fluxgate Magnetometers</span>
+        <ul class="nested">
+          <li title="Dexinmag Fluxgate Magnetometers are high-precision instruments designed for accurately measuring weak static and low-frequency vector magnetic fields. Utilizing the fluxgate principle, they offer superior performance for weak field detection compared to Hall or magnetoresistance sensors, featuring high stability, linearity, accuracy, and fully digital operation. Systems consist of a main electronic unit and a 1-axis or 3-axis probe (longitudinal or transverse), connected via cable. Key specifications across various models (DX-310 to DX-370 series) include measurement ranges up to ±1000µT, high resolutions down to 0.01nT, digital (RS-232, optional CAN bus) and analog (BNC) outputs, and wide operating temperature ranges. These magnetometers are suitable for diverse applications including geomagnetic monitoring, scientific research, calibration, geological surveying, aerospace, shielding effectiveness testing, and biomagnetism studies.">
+              <span class="product-name">Fluxgate Magnetometer</span>
+          </li>
+          <li title="The CTM-6W is a portable, high-accuracy fluxgate magnetometer designed for measuring weak static magnetic fields. It features a six-digit LED display with a resolution of 0.1nT and a measurement range of ±99999.9 nT (±1 Gs). Key characteristics include low static noise (<0.2 nT p-p), high accuracy (0.05% ± 10nT), and low residual bias (<10nT). The instrument includes a zero offset function for relative measurements, RS232 serial output for data logging, and operates on an internal rechargeable lithium battery (approx. 15 hours) or external charger. It's suitable for applications like measuring Earth's magnetic field components, residual magnetism, magnetic shielding effectiveness, and calibrating lower-precision magnetometers.">
+              <span class="product-name">CTM-6W Portable Fluxgate Magnetometer</span>
+          </li>
+         </ul>
+      </li>
+      <li> <!-- Category 4 -->
+        <span class="caret category-name">All lock in amplifiers</span>
+        <ul class="nested">
+            <li title="DXA-005 is a high-performance digital lock-in amplifier utilizing DSP technology with high-resolution converters (24-bit ADC, 16-bit DAC) for precise signal recovery. Designed to accurately measure amplitude and phase information of weak signals (down to 1nV) hidden in high noise (up to 130dB dynamic reserve) across a wide frequency range (10 μHz to 1.5 MHz). Features low input noise (2.5 nV/√Hz), fast time constants (down to 100ns), 8 synchronous demodulators, multi-harmonic measurement capabilities, integrated oscilloscope and spectrum analyzer functions, and 2-channel PID control. Includes comprehensive connectivity options (USB, Ethernet, WIFI, RS232, GPIB) for versatile use in demanding scientific research and industrial applications."><span class="product-name">Digital Lock in Amplifier DXA 005</span></li>
+            <li title="DXA-005B is a high-performance digital lock-in amplifier utilizing DSP technology with high-resolution converters (24-bit ADC, 16-bit DAC) for precise signal recovery. Designed to accurately measure amplitude and phase information of weak signals (down to 1nV) hidden in high noise (up to 130dB dynamic reserve) across a frequency range from 10 μHz to 250 kHz. Features low input noise (2.5 nV/√Hz), fast time constants (down to 100ns), 8 synchronous demodulators, multi-harmonic measurement capabilities, integrated oscilloscope and spectrum analyzer functions, and 2-channel PID control. Includes comprehensive connectivity options (USB, Ethernet, WIFI, RS232, GPIB) for versatile use in demanding scientific research and industrial applications."><span class="product-name">Digital Lock-In Amplifier-DXA-005B 20250407</span></li>
+            <li title="DXA-001C is a dual-channel lock-in amplifier designed for precise measurement of weak signals (amplitude and phase) from 1mHz to 102kHz. It features two independent input channels (configurable as single-ended or differential voltage, or current input with 10⁶/10⁸ V/A gain) and two independent reference channels (internal or external). Key specifications include high sensitivity (1nV to 1V full scale), low noise (5nV/√Hz), wide time constants (10µs to 3ks), and high dynamic reserve (>120dB). Unique capabilities include simultaneous measurement of up to 6 harmonics (3 per channel) and a 5.6-inch color display offering various data visualization formats (numerical, bar graph, polar plot, strip chart). Standard connectivity is via RS-232 and USB 2.0."><span class="product-name">DXA-001C Dual Channel Lock-in Amplifier</span></li>
+            <li title="DXA-003 is a high-performance digital lock-in amplifier operating from DC to 10MHz. It leverages digital demodulation technology for precise signal recovery, offering high sensitivity (1nV to 1V), low noise (down to 6nV/√Hz @ 100kHz), and excellent dynamic reserve (>120dB). Features include fast time constants (30ns to 4.4ks), harmonic detection, internal/external referencing, integrated Scope and Spectrum Analyzer functions, a PID controller, and AM modulation. Comprehensive connectivity (USB, RS-232, Ethernet) and a 5.6-inch color display make it suitable for demanding scientific research and measurement tasks requiring high-frequency signal analysis."><span class="product-name">DXA-003 10MHz Digital Lock-in Amplifier</span></li>
+            <li title="DXA-004 is a high-performance digital lock-in amplifier operating over a wide frequency range from DC to 60MHz. Utilizing digital demodulation technology, it offers precise signal recovery with high sensitivity (1nV to 1V), low input noise (down to 6nV/√Hz @ 100kHz), and excellent dynamic reserve (>120dB). Key features include fast time constants (30ns to 4.4ks), harmonic detection capabilities, internal and external referencing, multiple input configurations (50Ω/10MΩ impedance), and auxiliary I/O channels. Equipped with a 5.6-inch color display and comprehensive communication interfaces (USB, RS-232, Ethernet), the DXA-004 is suitable for advanced research and measurement applications requiring high-frequency signal analysis."><span class="product-name">DXA-004 60MHz Digital Lock-in Amplifier</span></li>
+         </ul>
+      </li>
+      <li> <!-- Category 5 -->
+        <span class="caret category-name">Other Instruments & Power Supplies</span>
+        <ul class="nested">
+            <li title="Precision 3-axis (XYZ) digital Gauss meter for measuring static (DC) magnetic fields. Features a high-resolution color display, multiple unit options (Gs, mT, Oe, kA/m), peak hold function, and standard USB connectivity for data logging or integration into automated systems. Suitable for scientific research, magnetic material production, aerospace applications, and quality control.">
+                <span class="product-name">3d Gauss Meter</span>
+            </li>
+            <li title="The F2030 is a high-performance, programmable bipolar DC current source designed for precision applications, delivering stable and accurate output from -10A to +10A with 0.1mA resolution and ±(0.05% setting + 2mA) accuracy. Key features include excellent stability (<0.02% @ 10A), low noise (<1mA RMS), a high compliance voltage up to 100V DC, and a controllable linear current ramp (0.01-2 A/s) suitable for driving inductive loads. It offers a floating output for flexible grounding, controlled current reversal, multiple current sweep modes, and comprehensive protection mechanisms (voltage compliance, internal overpower). Automation is facilitated via standard RS-232 and USB interfaces. Housed in a 3U rack-mountable chassis, it's ideal for laboratory and test environments requiring precise current control.">
+                <span class="product-name">F2030 Programmable Power Current Source</span>
+            </li>
+            <li title="The DXMP series comprises programmable, bipolar constant current power supplies optimized for driving inductive loads such as electromagnets and Helmholtz coils, enabling the generation of stable and precisely controlled magnetic fields. Key features include four-quadrant operation, smooth zero-crossing current reversal, adjustable linear current ramps (up to 50 A/s depending on model), digital control via front panel or remote interfaces (RS232/RS485), and comprehensive protection functions (overheating, overcurrent, external fault input). The series offers optional high current stability (10 ppm/h), an integrated Gauss meter option enabling direct Magnetic Field Control Mode, and a wide range of models covering different power (0.5-15 kW) and current (10-120 A) requirements, with water or air cooling depending on the model.">
+                <span class="product-name">DXMP Series Constant Current Power Supply</span>
+            </li>
+        </ul>
+      </li>
+    </ul>
+</div><!-- end productTreeWrapper -->
+
+<script>
+    // Get all elements with the class 'caret'
+    var toggler = document.getElementsByClassName("caret");
+    var i;
+
+    // Add a click event listener to each caret
+    for (i = 0; i < toggler.length; i++) {
+        toggler[i].addEventListener("click", function(event) {
+            // Find the nested list (ul) which is the next sibling of the clicked span (caret)
+            // Make sure the parent is the LI for this structure
+             let parentLi = this.parentElement;
+             if (!parentLi) return; // Should not happen with valid HTML
+
+            // Find the UL directly inside the LI that contains the nested items
+            // We changed structure slightly - nested UL is NOT the direct next sibling of the span.
+             let nestedList = parentLi.querySelector(".nested");
+
+            // Check if the nested list exists and is a UL element with the 'nested' class
+            if (nestedList && nestedList.tagName === 'UL' && nestedList.classList.contains('nested')) {
+                 // Toggle the 'active' class to show/hide the nested list (triggers CSS animation)
+                nestedList.classList.toggle("active");
+                 // Toggle the 'caret-down' class on the caret itself for visual feedback
+                this.classList.toggle("caret-down");
+            } else {
+                // Handle case where structure might be unexpected (optional)
+                console.warn("Could not find the nested list for caret:", this);
+            }
+             // Prevent the event from bubbling up if necessary, though unlikely needed here
+             event.stopPropagation();
+        });
+    }
+
+    // Optional: Pre-open a specific category on load (example: open first category)
+    /*
+    document.addEventListener('DOMContentLoaded', function() {
+        const firstCaret = document.querySelector('#productTree > li > .caret');
+        const firstNestedList = document.querySelector('#productTree > li > .nested');
+        if (firstCaret && firstNestedList) {
+            firstCaret.classList.add('caret-down');
+            firstNestedList.classList.add('active');
+        }
+    });
+    */
+</script>
+
+</body>
+</html>
